@@ -2,6 +2,13 @@
 
 import sys
 
+# if len(sys.argv) != 2:
+#   print("usage: ls8.py examples/mult.ls8")
+#   sys.exit(1)
+
+# sys.argv[0] == 'ls8.py'
+# sys.argv[1] == 'examples/mult.ls8'
+
 class CPU:
     """Main CPU class."""
 
@@ -13,9 +20,13 @@ class CPU:
         self.reg = [0] * 8
         #internal registers
         self.pc  = 0
+        #activate loop
+        self.running = False
 
-    def load(self):
+    def load(self, progname):
         """Load a program into memory."""
+        
+        """
 
         address = 0
 
@@ -34,6 +45,27 @@ class CPU:
         for instruction in program:
             self.ram[address] = instruction
             address += 1
+            
+        """
+        try:
+          address = 0
+          self.running = True
+          with open(progname, 'r') as f:
+            for line in f:
+              line = line.split("#")[0]
+              line = line.strip() #lose whitespace
+              if line == '':
+                continue
+              if len(line) > 0:
+                val = int(line, 2)
+                self.ram[address] = val
+                address += 1
+        except FileNotFoundError:
+          print(f'{sys.argv[0]}: {sys.argv[1]} not found')
+          sys.exit(2)
+                
+              
+          
 
 
     def alu(self, op, reg_a, reg_b):
