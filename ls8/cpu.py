@@ -22,6 +22,8 @@ class CPU:
         self.pc  = 0
         #activate loop
         self.running = False
+        
+        self.ir = None
 
     def load(self, progname):
         """Load a program into memory."""
@@ -60,6 +62,7 @@ class CPU:
                 val = int(line, 2)
                 self.ram[address] = val
                 address += 1
+                
         except FileNotFoundError:
           print(f'{sys.argv[0]}: {sys.argv[1]} not found')
           sys.exit(2)
@@ -73,7 +76,12 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
+        
+        if op == "MUL":
+          self.reg[reg_a] *= self.reg[reg_b]
+          
         #elif op == "SUB": etc
+        
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -110,22 +118,55 @@ class CPU:
         PRN = 0b01000111
         HLT = 0b00000001
         
-        running = True
+        # running = True
         
         #while cpu is running 
-        while running:
-          #set instruction register to read memory address stored in register pc
-          IR = self.ram[self.pc]
-          if IR == HLT:
-            running = False
-          elif IR == LDI:
-            self.ram_write(op_a, op_b)
-            #or self.reg[op_a] = op_b
-            self.pc += 3
-          elif IR == PRN:
-            print(op_b)
-            #or print(self.reg[op_a])
-            self.pc += 2
+        while self.running:
+          # #set instruction register to read memory address stored in register pc
+          # IR = self.ram[self.pc]
+          # if IR == HLT:
+          #   running = False
+          # elif IR == LDI:
+          #   self.ram_write(op_a, op_b)
+          #   #or self.reg[op_a] = op_b
+          #   self.pc += 3
+          # elif IR == PRN:
+          #   print(op_b)
+          #   #or print(self.reg[op_a])
+          #   self.pc += 2
+          
+          #get instruction from ram 
+          ram_read_ins= self.ram_read(self.pc)
+          self.ir = ram_read_ins
+          
+          if ram_read_ins == 0b00000001:
+            self.running  = False
+            exit()
+          format_ram_read_ins = '{0:8b}'.format(ram_read_ins)
+          num_op = int(format_ram_read_ins[:2].strip() or '00', 2)
+          alu_op = int(format_ram_read_ins[2].strip() or '0', 2)
+          inst_set = int(format_ram_read_ins[3].strip() or '0', 2)
+          inst_iden = int(format_ram_read_ins[4:].strip() or '000', 2)
+          
+          if alu_op == int('1', 2):
+            self.alu('MUL', self.ram_read(self.pc + 1), self.ram_read(self.pc + 2))
+            
+            #Print output 
+            self.pc += int(num_op) + 1
+            
+          else:
+            if ram_read_ins == 0b10000010:
+              key = int(self.ram_read(self.pc + 1))
+              value = self.ram_read(self.pc + 2)
+              self.reg[key] = value 
+              self.pc += int(num_op) + 1
+            
+            elif ram_read_ins  == 0b01000111:
+              key = int(self.ram_read(self.pc + 2))
+              print(int(self.reg[key]))
+              self.pc += int(num_op) + 1
+          
+          
         
         
     #helper function
