@@ -2,12 +2,12 @@
 
 import sys
 
-# if len(sys.argv) != 2:
-#   print("usage: ls8.py examples/mult.ls8")
-#   sys.exit(1)
+#create instructions for LDI, PRN, and HLT programs
+LDI = 0b10000010
+PRN = 0b01000111
+HLT = 0b00000001
+MUL = 0b10100010
 
-# sys.argv[0] == 'ls8.py'
-# sys.argv[1] == 'examples/mult.ls8'
 
 class CPU:
     """Main CPU class."""
@@ -22,14 +22,22 @@ class CPU:
         self.pc  = 0
         #activate loop
         self.running = False
-        
         self.ir = None
+        
+        self.branchtable = {}
+        self.branchtable[HLT] = self.handle_hlt
+        self.branchtable[LDI] = self.handle_ldi
+        self.branchtable[PRN] = self.handle_prn
+        self.branchtable[MUL] = self.handle_mul
+        
+        
+        
+        
+        
 
     def load(self, progname):
         """Load a program into memory."""
-        
         """
-
         address = 0
 
         # For now, we've just hardcoded a program:
@@ -43,28 +51,33 @@ class CPU:
             0b00000000,
             0b00000001, # HLT
         ]
-
         for instruction in program:
             self.ram[address] = instruction
             address += 1
-            
+
         """
         try:
           address = 0
           self.running = True
           with open(progname, 'r') as f:
+            #read the lines
             for line in f:
+              #split line before and after comment symbol
               line = line.split("#")[0]
+              #extract number
               line = line.strip() #lose whitespace
+              #ignore blank lines
               if line == '':
                 continue
               if len(line) > 0:
+                #convert our binary string to a number
                 val = int(line, 2)
-                self.ram[address] = val
+                #store val at address in memory 
+                self.ram_write(val, address)
                 address += 1
                 
         except FileNotFoundError:
-          print(f'{sys.argv[0]}: {sys.argv[1]} not found')
+          print(f'{sys.argv[0]}: {progname} not found')
           sys.exit(2)
                 
               
