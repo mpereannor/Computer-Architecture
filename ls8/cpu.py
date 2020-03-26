@@ -11,6 +11,10 @@ MUL = 0b10100010
 PUSH = 0b01000101
 POP = 0b01000110
 SP  = 7
+#subroutines
+CALL = 0b01010000 
+RET = 0b00010001
+JMP = 0b01010100
 
 class CPU:
   """Main CPU Class"""
@@ -34,6 +38,9 @@ class CPU:
     self.branchtable[POP] = self.handles_pop
     #register 7 is reserved as the stack pointer, which is 0xf4 per specs
     self.reg[SP] = 0xf4
+    #subroutines
+    self.branchtable[CALL] = self.handle_cal
+    self.branchtable[RET] = self.handle_ret
     
     
   #helper functions
@@ -138,6 +145,19 @@ class CPU:
     #increment the SP
     self.reg[SP] += 1  
   
+  #subroutines
+  def handle_cal(self):
+    register = int(self.ram_read(self.pc + 1))
+    value = self.pc + 2 
+    # value = int(self.ram_read(self.pc + 2))
+    self.pc = self.reg[register]
+    self.reg[SP] -= 1
+    self.ram_write(self.reg[SP], value)
+    
+  def handle_ret(self):
+    self.pc = self.ram[self.reg[SP]]
+    self.reg[SP] += 1
+    
   def run(self):
     while self.running:
       IR = self.ram[self.pc]
