@@ -15,6 +15,7 @@ JMP = 0b01010100
 JEQ = 0b01010101
 JNE = 0b01010110
 SP = 7
+
 #set flags
 less_flag = 0b00000100
 greater_flag = 0b00000010
@@ -27,7 +28,7 @@ class CPU:
         self.ram = [0] * 256
         self.reg = [0] * 8
         self.pc = 0
-        self.fl = 0
+        self.flag = 0
         self.branchtable = {
         HLT: self.handle_hlt,
         LDI: self.handle_ldi,
@@ -57,17 +58,7 @@ class CPU:
             sys.exit(1)
         program = sys.argv[1]
         address = 0
-        # For now, we've just hardcoded a program:
-        # program = [
-        #     # From print8.ls8
-        #     0b10000010, # LDI R0,8
-        #     0b00000000,
-        #     0b00001000,
-        #     0b01000111, # PRN R0
-        #     0b00000000,
-        #     0b00000001, # HLT
-        # ]
-        #open file
+      
         with open(program) as file:
             #read the lines
             for line in file:
@@ -91,13 +82,13 @@ class CPU:
         elif op == "CMP":
             #if register of reg_a is less than that of reg_b, set flag to the less_flag
             if self.reg[reg_a] < self.reg[reg_b]:
-                self.fl = less_flag
+                self.flag = less_flag
             # if greater, set to greater flag
             elif self.reg[reg_a] > self.reg[reg_b]:
-                self.fl = greater_flag
+                self.flag = greater_flag
             # otherwise, set to equal flag
             else:
-                self.fl = equal_flag    
+                self.flag = equal_flag    
         else:
             raise Exception("Unsupported ALU operation")
     def trace(self):
@@ -107,7 +98,7 @@ class CPU:
         """
         print(f"TRACE: %02X | %02X %02X %02X |" % (
             self.pc,
-            #self.fl,
+            #self.flag,
             #self.ie,
             self.ram_read(self.pc),
             self.ram_read(self.pc + 1),
@@ -168,15 +159,15 @@ class CPU:
         self.pc = self.reg[operand_a]
     def handle_jeq(self, operand_a, operand_b):
         #if the flag is the equal flag
-        if self.fl & equal_flag:
+        if self.flag & equal_flag:
             #set pc to the register for operand_a
             self.pc = self.reg[operand_a]
             #otherwise increment self.pc
         else:
             self.pc += 2
     def handle_jne(self, operand_a, operand_b):
-        # if no self.fl and equal flag after cmp
-        if not self.fl & equal_flag:
+        # if no self.flag and equal flag after cmp
+        if not self.flag & equal_flag:
             #set pc to the register for operand_a
             self.pc = self.reg[operand_a]
             #otherwise increment self.pc
